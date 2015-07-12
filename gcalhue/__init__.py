@@ -1,8 +1,10 @@
 from .application_base import Application
 
+calendars = []
+
 
 def main():
-    app = Application()
+    app = Application(calendars)
     app.run()
 
 
