@@ -62,8 +62,12 @@ class Application(object):
         return credentials
 
     @staticmethod
+    def format_into_iso(date_object):
+        return date_object.strftime('%Y-%m-%dT%H:%M:%S.%f%z')
+
+    @staticmethod
     def now_utc_string():
-        return datetime.utcnow().isoformat() + 'Z'
+        return datetime.datetime.utcnow().isoformat() + 'Z'
 
     @staticmethod
     def now():
@@ -77,16 +81,26 @@ class Application(object):
 
     def search_calendar(self, calendar, time=None, result_count=None):
         _results = result_count or 1
-        _time = time or self.now_utc_string()
+        if time:
+            if type(time) is not str:
+                _time = self.format_into_iso(time)
+            else:
+                _time = time
+        else:
+            _time = self.now_utc_string()
         return self.service.events().list(
             calendarId=calendar, timeMin=_time, maxResults=_results,
             singleEvents=True, orderBy="startTime"
         ).execute()
 
 
-    def event_temporal_relation(self, event):
+    def event_temporal_relation(self, event, time=None):
         """ Determine the relation of "now" to the top event.
         """
+        characteristics = dict(soon=False, now=False)
+        time = time or self.now()
+        event_start = event['start']['dateTime']
+        event_end
         pass
 
     def get_one_item(self, *args, **kwargs):

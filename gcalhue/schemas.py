@@ -26,4 +26,14 @@ class Event_Schema(Schema):
     creator = fields.Field()
     id = fields.String()
 
-
+class CalendarQuery(Schema):
+    nextPageToken = fields.String()
+    kind = fields.String()
+    defaultReminders = fields.Field()
+    # Main Body of the query.
+    items = fields.List(fields.Nested(Event_Schema))
+    updated = fields.DateTime()
+    summary = fields.String()
+    etag = fields.String()
+    timeZone = fields.String()
+    accessRole = fields.String()
