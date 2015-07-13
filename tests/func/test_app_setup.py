@@ -23,8 +23,28 @@ class TestSomething(TestBase):
         update = start.replace(minute=start.minute + 1, )
         #isostring = update.strftime('%Y-%m-%dT%H:%M:%S.%f%z')
         min_later = app.events(cname, time=update)[0]
+        # Test is probably self evident...
         assert(update > item['start']['dateTime'])
-        assert(min_later['summary'] == item['summary'])
+        assert(min_later['iCalUID'] == item['iCalUID'])
 
+    def test_report_inprogress(self, secrets, app):
+        cname = secrets['calendars'][0]
+        item = app.events(cname)[0]
+        time = item['start']['dateTime']
+        time = time.replace(minute=time.minute + 1,)
+        assert(app.event_temporal_relation(item, time) == "now")
 
+    def test_report_soon(self, secrets, app):
+        cname = secrets['calendars'][0]
+        item = app.events(cname)[0]
+        time = item['start']['dateTime']
+        time = time.replace(minute=time.minute - 1,)
+        assert(app.event_temporal_relation(item, time) == "soon")
+
+    def test_report_clear(self, secrets, app):
+        cname = secrets['calendars'][0]
+        item = app.events(cname)[0]
+        time = item['start']['dateTime']
+        time = time.replace(hour=time.hour - 1,)
+        assert(app.event_temporal_relation(item, time) == "clear")
 

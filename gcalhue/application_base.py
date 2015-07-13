@@ -22,6 +22,7 @@ COLORS = {
 class Application(object):
     def __init__(self, calendars, interval=None, level=None):
         self.calendars = calendars
+        self.soon = 600
         self.interval = interval or 60 # one minute between checks.
         self.credentials = self.get_credentials()
         self.validator = CalendarQuery()
@@ -99,11 +100,14 @@ class Application(object):
     def event_temporal_relation(self, event, time=None):
         """ Determine the relation of "now" to the top event.
         """
-        characteristics = dict(soon=False, now=False)
         time = time or self.now()
         event_start = event['start']['dateTime']
-        event_end
-        pass
+        event_end = event['end']['dateTime']
+        if event_start < time < event_end:
+            return "now"
+        if event_start > time and (event_start - time).seconds <= self.soon:
+            return "soon"
+        return "clear"
 
     def run_task(self):
         for cal in self.calendars:
