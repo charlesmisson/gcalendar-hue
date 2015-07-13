@@ -8,7 +8,7 @@ import os
 import logging
 from time import sleep
 import pytz
-from schemas import Event_Schema
+from schemas import CalendarQuery
 
 
 #  Standard colors for room states.
@@ -24,7 +24,7 @@ class Application(object):
         self.calendars = calendars
         self.interval = interval or 60 # one minute between checks.
         self.credentials = self.get_credentials()
-        self.validator = Event_Schema()
+        self.validator = CalendarQuery()
         self.http = self.credentials.authorize(httplib2.Http())
         self.service = discovery.build('calendar', 'v3', http=self.http)
         logging.basicConfig()
@@ -73,14 +73,9 @@ class Application(object):
     def now():
         return datetime.datetime.now(pytz.utc)
 
-    def unmarshall_event(self, event, strict=False):
-        event, errors = self.validator.load(event)
-        if strict and errors:
-            raise ValueError(errors)
-        return event
-
-    def search_calendar(self, calendar, time=None, result_count=None):
-        _results = result_count or 1
+    def search_calendar(self, calendar, time=None,
+                        result_count=None, strict=False):
+        _results = result_count or 2
         if time:
             if type(time) is not str:
                 _time = self.format_into_iso(time)
@@ -88,11 +83,18 @@ class Application(object):
                 _time = time
         else:
             _time = self.now_utc_string()
-        return self.service.events().list(
+
+        query, errors = self.validator.load(self.service.events().list(
             calendarId=calendar, timeMin=_time, maxResults=_results,
             singleEvents=True, orderBy="startTime"
-        ).execute()
+        ).execute())
 
+        if errors and strict:
+            raise ValueError(errors)
+        return query
+
+    def events(self, *args, **kwargs):
+        return self.search_calendar(*args, **kwargs).get('items', [])
 
     def event_temporal_relation(self, event, time=None):
         """ Determine the relation of "now" to the top event.
@@ -102,13 +104,6 @@ class Application(object):
         event_start = event['start']['dateTime']
         event_end
         pass
-
-    def get_one_item(self, *args, **kwargs):
-        # TODO:Transform into a generic getter for an accessor chain
-        # get_one_item(['name', 0, 'name', 1]) ->
-        #                                       _['name'][0]['name'][1]
-        response = self.search_calendar(*args, **kwargs)
-        return response.get('items', [None])[0]
 
     def run_task(self):
         for cal in self.calendars:

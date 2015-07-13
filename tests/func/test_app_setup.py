@@ -9,8 +9,7 @@ class TestSomething(TestBase):
         return Application(calendars)
 
     def test_application(self, app):
-        item = app.get_one_item(app.calendars[0],)
-        event = app.unmarshall_event(item)['start']['dateTime']
+        item = app.search_calendar(app.calendars[0],)
 
     def test_config(self, secrets):
         assert(secrets)
@@ -19,17 +18,13 @@ class TestSomething(TestBase):
         """Make sure that an event currently underway is still the top thing
         found"""
         cname = secrets['calendars'][0]
-        item = app.unmarshall_event(app.get_one_item(cname))
+        item = app.events(cname)[0]
         start = item['start']['dateTime']
         update = start.replace(minute=start.minute + 1, )
         #isostring = update.strftime('%Y-%m-%dT%H:%M:%S.%f%z')
-        min_later = app.unmarshall_event(app.get_one_item(cname,
-                                                          time=update))
+        min_later = app.events(cname, time=update)[0]
         assert(update > item['start']['dateTime'])
         assert(min_later['summary'] == item['summary'])
 
-    def test_x(self, app):
-        x = app.search_calendar(app.calendars[0], result_count=1)
-        for i in x:
-            print i, x[i]
+
 
