@@ -77,13 +77,10 @@ class Application(object):
     def search_calendar(self, calendar, time=None,
                         result_count=None, strict=False):
         _results = result_count or 2
-        if time:
-            if type(time) is not str:
-                _time = self.format_into_iso(time)
-            else:
-                _time = time
+        if time and type(time) is not str:
+            _time = self.format_into_iso(time)
         else:
-            _time = self.now_utc_string()
+            _time = time or self.now_utc_string()
 
         query, errors = self.validator.load(self.service.events().list(
             calendarId=calendar, timeMin=_time, maxResults=_results,
