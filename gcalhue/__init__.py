@@ -1,6 +1,8 @@
 from .application_base import Application
 
-calendars = []
+calendars = [
+    "calendar@resource.calendar.google.com",
+]
 
 
 def main():

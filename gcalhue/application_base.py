@@ -10,64 +10,36 @@ import sys
 from time import sleep
 import pytz
 from schemas import CalendarQuery
+import phue
+from resource import CalendarResource
 
+logging.basicConfig()
 
 #  Standard colors for room states.
 COLORS = {
     "clear": (1.,1.),
     "soon": (1.,1.),
     "now": (1.,1.),
+    "__default": (1.,1.)
 }
-
-
-class CalendarResource(object):
-    def __init__(self, calendar, resource):
-        self.calendar = calendar
-        self.resource = resource
-        self.uid_upcoming = None
-        self.status = None
-        self.change = False
-
-    def alert(self):
-        pass
-
-    def apply(self, state):
-        if self.change:
-            self.alert()
-        print self.calendar, state
-
-    def change_for_status(self, events):
-        if events[0][1]['iCalUID'] != self.uid_upcoming:
-            self.uid_upcoming = events[0][1]['iCalUID']
-            self.change = True
-
-        first, second = [i[0] for i in events][:2]
-
-        if first in ("clear", "soon",):
-            self.apply(first)
-        elif second == "soon":
-            # First will always be "now" so either do a `soon` or a `now`
-            # state for the viz.
-            self.apply(second)
-        else:
-            self.apply(first)
-        self.change = False
 
 
 class Application(object):
     def __init__(self, calendars, interval=None, level=None):
-        self.calendars = map(
-            lambda cal: CalendarResource(cal, 0),
-            calendars)
+        self.calendars = calendars
         self.soon = 600
         self.interval = interval or 60 # one minute between checks.
         self.credentials = self.get_credentials()
         self.validator = CalendarQuery()
         self.http = self.credentials.authorize(httplib2.Http())
         self.service = discovery.build('calendar', 'v3', http=self.http)
-        logging.basicConfig()
         self.log = logging.getLogger('gcal-hue')
         self.log.setLevel(level or logging.DEBUG)
+
+    def __build_calendars(self, calendars):
+        return map(
+            lambda cal: CalendarResource(cal, 0),
+            calendars)
 
     @staticmethod
     def get_credentials():
