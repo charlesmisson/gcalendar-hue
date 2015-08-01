@@ -42,14 +42,17 @@ class Application(object):
         _dict[accessor] = _dict.pop(accessor) + self.suffix
         return _dict
 
+    def _build_one_cal(self, settings):
+        cal = settings['calendar']
+        light = self.light_for_name(
+            settings['light'])
+        return CalendarResource(cal, light)
+
     def _build_calendars(self, cal_settings):
         cals = cal_settings.get('light_maps', [])
         if self.suffix:
             cals = map(self._suffix_string, cals)
-        return map(
-            lambda cal: CalendarResource(cal['calendar'],
-                        self.light_for_name(cal['light'])),
-            cals)
+        return map(self._build_one_cal, cals)
 
     @staticmethod
     def get_credentials():
@@ -142,6 +145,8 @@ class Application(object):
                 cal.change_for_status(relations)
 
     def run(self):
+        if not self.calendars:
+            self.error_and_exit("No Calendars Found")
         while True:
             self.run_task()
             sleep(self.interval)
