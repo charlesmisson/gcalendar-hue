@@ -10,36 +10,46 @@ import sys
 from time import sleep
 import pytz
 from schemas import CalendarQuery
+from resources import CalendarResource
 import phue
-from resource import CalendarResource
 
-logging.basicConfig()
-
-#  Standard colors for room states.
-COLORS = {
-    "clear": (1.,1.),
-    "soon": (1.,1.),
-    "now": (1.,1.),
-    "__default": (1.,1.)
-}
 
 
 class Application(object):
-    def __init__(self, calendars, interval=None, level=None):
-        self.calendars = calendars
-        self.soon = 600
-        self.interval = interval or 60 # one minute between checks.
+    def __init__(self, prefs, logger):
+        self.prefs = prefs
+        if prefs.get('logging', 'enabled', default=False):
+            self.log = logger
+            self.log.setLevel(prefs.get('logging', 'level', default=20))
+        # The Phue library is finicky, won't load lights until invoked
+        self.soon = prefs.get('soon', default=600)
+        self.interval = prefs.get('check_interval', default=60)
         self.credentials = self.get_credentials()
         self.validator = CalendarQuery()
-        self.http = self.credentials.authorize(httplib2.Http())
-        self.service = discovery.build('calendar', 'v3', http=self.http)
-        self.log = logging.getLogger('gcal-hue')
-        self.log.setLevel(level or logging.DEBUG)
+        self.suffix = prefs.get('google_calendar', 'suffix', default=None)
 
-    def __build_calendars(self, calendars):
+        # self.http = self.credentials.authorize(httplib2.Http())
+        # self.service = discovery.build('calendar', 'v3', http=self.http)
+        self.hue = phue.Bridge(prefs.get('philips_hue', 'ip'))
+        self.lights = self.hue.lights_by_name
+        self.log.debug(" ".join(l.name for l in self.hue.lights))
+        self.calendars = self._build_calendars(
+            self.prefs.get('google_calendar', default={}))
+    def light_for_name(self, name):
+        return self.lights.get(name, None)
+
+    def _suffix_string(self, _dict, accessor="calendar"):
+        _dict[accessor] = _dict.pop(accessor) + self.suffix
+        return _dict
+
+    def _build_calendars(self, cal_settings):
+        cals = cal_settings.get('light_maps', [])
+        if self.suffix:
+            cals = map(self._suffix_string, cals)
         return map(
-            lambda cal: CalendarResource(cal, 0),
-            calendars)
+            lambda cal: CalendarResource(cal['calendar'],
+                        self.light_for_name(cal['light'])),
+            cals)
 
     @staticmethod
     def get_credentials():
@@ -100,6 +110,10 @@ class Application(object):
             raise ValueError(errors)
         return query
 
+    def error_and_exit(self, error):
+        self.log.error(repr(error))
+        sys.exit(1)
+
     def events(self, *args, **kwargs):
         return self.search_calendar(*args, **kwargs).get('items', [])
 
@@ -120,8 +134,7 @@ class Application(object):
 
     def run_task(self):
         if not self.calendars:
-            print "No Calendars Found"
-            sys.exit(1)
+            self.error_and_exit("No Calendars")
         for cal in self.calendars:
             events = self.events(cal.calendar)
             if events:

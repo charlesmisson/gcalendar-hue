@@ -1,7 +1,11 @@
-import phue
+import yaml
 
-def get_hue(ip):
-    return phue.Bridge(ip)
+COLORS = {
+        "clear": (1.,1.),
+        "soon": (1.,1.),
+        "now": (1.,1.),
+        "__default": (1.,1.)
+}
 
 
 class CalendarResource(object):
@@ -17,9 +21,13 @@ class CalendarResource(object):
         pass
 
     def apply(self, state):
-        if self.change:
-            self.alert()
-        print self.calendar, state
+        # if self.change:
+        #     self.alert()
+        self.resource.on = True
+        self.resource.xy = COLORS.get(
+            state,
+            COLORS["__default"]
+        )
 
     def change_for_status(self, events):
         if events[0][1]['iCalUID'] != self.uid_upcoming:
@@ -37,3 +45,30 @@ class CalendarResource(object):
         else:
             self.apply(first)
         self.change = False
+
+
+class YAMLPreferenceLoader(object):
+    def __init__(self, _file):
+        try:
+            _f = yaml.load(
+                _file.read())
+            if type(_f) is str or not _f:
+                raise TypeError
+        except Exception, e:
+            raise e
+        self._data = _f
+
+    def get(self, *args, **kwargs):
+        default = kwargs.get('default', False)
+        loc = self._data
+        for k in args:
+            loc = loc.get(k)
+            if loc is None:
+                if default:
+                    return default
+                else:
+                    raise ValueError
+        return loc
+
+
+
