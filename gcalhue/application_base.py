@@ -36,6 +36,7 @@ class Application(object):
 
         self.calendars = self._build_calendars(
             self.prefs.get('google_calendar', default={}))
+
     def light_for_name(self, name):
         return self.lights.get(name, None)
 
