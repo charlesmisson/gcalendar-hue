@@ -1,20 +1,22 @@
 import yaml
-
+from copy import copy
 COLORS = {
         "clear": (1.,1.),
         "soon": (1.,1.),
         "now": (1.,1.),
-        "__default": (1.,1.)
 }
 
 
 class CalendarResource(object):
-    def __init__(self, calendar, resource):
+    def __init__(self, calendar, resource, bri=None, colors=None):
         self.calendar = calendar
         self.resource = resource
         self.uid_upcoming = None
         self.status = None
         self.change = False
+        self.bri = max(1, min(bri or 128, 255))
+        if colors:
+            self.update_colors(colors)
 
     def alert(self, _type=None):
         _type = _type or "__default"
@@ -24,10 +26,14 @@ class CalendarResource(object):
         # if self.change:
         #     self.alert()
         self.resource.on = True
-        self.resource.xy = COLORS.get(
-            state,
-            COLORS["__default"]
-        )
+        self.resource.xy = COLORS.get(state)
+
+    def update_colors(self, colors):
+        print self.calendar
+        print self.bri
+        for k, val in colors.items():
+            print k, val
+        print
 
     def change_for_status(self, events):
         if events[0][1]['iCalUID'] != self.uid_upcoming:
@@ -47,6 +53,9 @@ class CalendarResource(object):
         self.change = False
 
 
+class _DoesNotExist(object):
+    pass
+
 class YAMLPreferenceLoader(object):
     def __init__(self, _file):
         try:
@@ -59,16 +68,19 @@ class YAMLPreferenceLoader(object):
         self._data = _f
 
     def get(self, *args, **kwargs):
-        default = kwargs.get('default', False)
+        # Named kwargs in py3 would fix this. :-/
+        default = kwargs.get('default', _DoesNotExist())
         loc = self._data
         for k in args:
             loc = loc.get(k)
             if loc is None:
-                if default:
-                    return default
-                else:
+                if type(default) is _DoesNotExist:
                     raise ValueError
-        return loc
+                else:
+                    return default
+        # if a dict is returned, it must be a copy so that any update methods
+        # don't overwrite the data in-memory.
+        return copy(loc)
 
 
 

@@ -44,11 +44,25 @@ class Application(object):
         _dict[accessor] = _dict.pop(accessor) + self.suffix
         return _dict
 
+    def _merge_settings(self, key, localcontext):
+        toplevel = self.prefs.get(key, default={})
+        if type(toplevel) is dict and type(localcontext.get(key, {})) is dict:
+            toplevel.update(localcontext.get(key, {}))
+            return toplevel
+        else:
+            return localcontext.get(key, None) or toplevel or None
+
     def _build_one_cal(self, settings):
         cal = settings['calendar']
+        # Get app-wide colors
+        # colors = self.prefs.get('colors', default={})
+        # # Merge preferring cal colors
+        # colors.update(settings.get('colors', {}))
+        colors = self._merge_settings('colors', settings)
+        bri = self._merge_settings('bri', settings)
         light = self.light_for_name(
             settings['light'])
-        return CalendarResource(cal, light)
+        return CalendarResource(cal, light, bri, colors)
 
     def _build_calendars(self, cal_settings):
         cals = cal_settings.get('light_maps', [])
