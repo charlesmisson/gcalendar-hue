@@ -1,0 +1,32 @@
+google_calendar:
+  suffix: "@resource.calendar.google.com"
+  light_maps:
+      # replace the calendar with the calendar ID
+      # Not a real calendar ID.
+    - calendar: calendarname_2d5921623999352222
+      # replace the light with the name in the bridge
+      light: light0
+      # 1-255, zero will change to 1, above 255 will be set to 255
+      bri: 255
+    - calendar: calendarname_2d5921623999352222
+      light: light1
+      bri: 128
+# The timeframe in seconds from now to the meeting that would be considered "upcoming soon"
+soon: 600
+# In seconds, how often to check against a calendar.
+check_interval: 60
+philips_hue:
+  ip: 192.168.0.19
+  # The authentication token for the hue button
+  # This isn't a real one.
+  token: aef51bb819bfd4ee9f3391f82183357
+logging:
+  enabled: true
+  # 10 is debug
+  level: 10
+# only options are: clear, soon, now
+colors:
+  #xy format
+  clear: [.2, .4]
+  soon: [.4, .2]
+  now: [.2, .1]
