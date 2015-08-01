@@ -21,7 +21,6 @@ class Application(object):
         if prefs.get('logging', 'enabled', default=False):
             self.log = logger
             self.log.setLevel(prefs.get('logging', 'level', default=20))
-        # The Phue library is finicky, won't load lights until invoked
         self.soon = prefs.get('soon', default=600)
         self.interval = prefs.get('check_interval', default=60)
         self.credentials = self.get_credentials()
@@ -31,8 +30,10 @@ class Application(object):
         # self.http = self.credentials.authorize(httplib2.Http())
         # self.service = discovery.build('calendar', 'v3', http=self.http)
         self.hue = phue.Bridge(prefs.get('philips_hue', 'ip'))
+        # The Phue library is finicky, won't load lights until invoked
         self.lights = self.hue.lights_by_name
         self.log.debug(" ".join(l.name for l in self.hue.lights))
+
         self.calendars = self._build_calendars(
             self.prefs.get('google_calendar', default={}))
     def light_for_name(self, name):
