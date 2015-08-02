@@ -29,7 +29,8 @@ class Application(object):
 
         self.http = self.credentials.authorize(httplib2.Http())
         self.service = discovery.build('calendar', 'v3', http=self.http)
-        self.hue = phue.Bridge(prefs.get('philips_hue', 'ip'))
+        self.hue = phue.Bridge(prefs.get('philips_hue', 'ip'),
+                               prefs.get('philips_hue', 'token'))
         # The Phue library is finicky, won't load lights until invoked
         self.lights = self.hue.lights_by_name
         self.log.info("Lights found: %s"% ", ".join(

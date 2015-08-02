@@ -12,8 +12,8 @@ logger = logging.getLogger('gcal-hue')
 def main(pref):
     try:
         preferences = YAMLPreferenceLoader(pref)
-    except:
-        logger.error(" Misformatted or Empty Preference File")
+    except Exception, e:
+        logger.error(repr(e))
         sys.exit(1)
     app = Application(preferences, logger)
     if app.log.isEnabledFor(logging.DEBUG):

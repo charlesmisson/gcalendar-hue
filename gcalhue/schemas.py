@@ -55,7 +55,7 @@ class Colors(Schema):
 
 class Hub(Schema):
     ip = fields.String(required=True)
-    token = fields.String()
+    token = fields.String(required=True)
 
 
 class GcalSettings(Schema):
