@@ -19,8 +19,13 @@ def main(pref):
     if app.log.isEnabledFor(logging.DEBUG):
         import pprint
         for l in pprint.pformat(preferences._data).split('\n'):
-            logger.debug(l)
-    #app.run()
+            logger.debug(">  "+l.strip())
+    try:
+        app.run()
+    except KeyboardInterrupt:
+        app.log.info("Shutting down on keyboard Interrupt")
+        for cal in app.calendars:
+            cal.resource.on = False
 
 
 if __name__ == '__main__':

@@ -8,41 +8,38 @@ COLORS = {
 
 
 class CalendarResource(object):
-    def __init__(self, calendar, resource, bri=None, colors=None):
+    def __init__(self, calendar, resource, logger, bri=None, colors=None):
         self.calendar = calendar
         self.resource = resource
         self.uid_upcoming = None
+        self.errors = False
         self.status = None
         self.change = False
         self.bri = max(1, min(bri or 128, 255))
-        if colors:
-            self.update_colors(colors)
-
-    def alert(self, _type=None):
-        _type = _type or "__default"
-        pass
+        self.colors = colors or COLORS
+        self.logger = logger
 
     def apply(self, state):
-        # if self.change:
-        #     self.alert()
+        color = self.colors.get(state, COLORS.get(state))
+        self.logger.debug("Setting %s to %s" %(self.calendar, color))
         self.resource.on = True
-        self.resource.xy = COLORS.get(state)
-
-    def update_colors(self, colors):
-        print self.calendar
-        print self.bri
-        for k, val in colors.items():
-            print k, val
-        print
+        self.resource.brightness = self.bri
+        self.resource.xy = color
 
     def change_for_status(self, events):
-        if events[0][1]['iCalUID'] != self.uid_upcoming:
-            self.uid_upcoming = events[0][1]['iCalUID']
-            self.change = True
+        # if events[0][1]['iCalUID'] == self.uid_upcoming:
+        #     self.logger.debug("%s status is the same (%s)" % (
+        #         self.calendar, events[0][0]
+        #     ))
+        #     return
 
+        self.uid_upcoming = events[0][1]['iCalUID']
         first, second = [i[0] for i in events][:2]
-
+        self.logger.debug("%s events: %s, %s" % (
+                self.calendar, first, second
+        ))
         if first in ("clear", "soon",):
+            self.logger.info("%s changing to %s" % (self.calendar, first))
             self.apply(first)
         elif second == "soon":
             # First will always be "now" so either do a `soon` or a `now`
@@ -50,7 +47,6 @@ class CalendarResource(object):
             self.apply(second)
         else:
             self.apply(first)
-        self.change = False
 
 
 class _DoesNotExist(object):
