@@ -43,6 +43,7 @@ class CalendarQuery(Schema):
 class Calendar(Schema):
     calendar = fields.String(required=True)
     light = fields.String(required=True)
+    name = fields.String()
     suffix = fields.Boolean()
     bri = fields.Int()
 

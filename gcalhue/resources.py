@@ -9,9 +9,11 @@ COLORS = {
 
 
 class CalendarResource(object):
-    def __init__(self, calendar, resource, logger, bri=None, colors=None):
+    def __init__(self, calendar, resource, logger,
+                 name=None, bri=None, colors=None):
         self.calendar = calendar
         self.resource = resource
+        self.name_for_people = name
         self.trigger_uid = None
         self.errors = False
         self.status = None
@@ -22,7 +24,9 @@ class CalendarResource(object):
 
     def apply(self, state):
         color = self.colors.get(state, COLORS.get(state))
-        self.logger.debug("Setting %s to %s" %(self.calendar, color))
+        self.logger.debug("%s is %s, setting to %s with %s light" %(
+            self.name_for_people, state, color, self.resource.name
+        ))
         self.resource.on = True
         self.resource.brightness = self.bri
         self.resource.xy = color
@@ -32,14 +36,13 @@ class CalendarResource(object):
             return
         self.trigger_uid = uid
         self.apply(state)
-        self.logger.info("%s changing to %s" % (self.calendar,state))
 
     def change_for_status(self, events):
         self.uid_upcoming = events[0][1]['iCalUID']
         first, second = [i[0] for i in events][:2]
         f_uid, s_uid = [i[1]['iCalUID'] for i in events][:2]
         self.logger.debug("%s events: %s, %s" % (
-                self.calendar, first, second
+                self.name_for_people, first, second
         ))
         if second == "soon":
             self.trigger(second, s_uid)

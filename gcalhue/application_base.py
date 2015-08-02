@@ -67,8 +67,9 @@ class Application(object):
             cal += self.suffix
         _settings_string = "bri: %s, colors: %s" % (bri or "default",
                                                     colors or "default")
-        self.log.info("%s with settings %s", light.name, _settings_string)
-        return CalendarResource(cal, light, self.log, bri, colors)
+        hrr_name = settings.get('name', cal)
+        self.log.info("%s with settings %s", hrr_name, _settings_string)
+        return CalendarResource(cal, light, self.log, hrr_name, bri, colors)
 
     def _build_calendars(self, cal_settings):
         cals = cal_settings.get('light_maps', [])
