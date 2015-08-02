@@ -26,6 +26,7 @@ class Event_Schema(Schema):
     creator = fields.Field()
     id = fields.String()
 
+
 class CalendarQuery(Schema):
     nextPageToken = fields.String()
     kind = fields.String()
@@ -37,3 +38,38 @@ class CalendarQuery(Schema):
     etag = fields.String()
     timeZone = fields.String()
     accessRole = fields.String()
+
+
+class Calendar(Schema):
+    calendar = fields.String(required=True)
+    light = fields.String(required=True)
+    suffix = fields.Boolean()
+    bri = fields.Int()
+
+
+class Colors(Schema):
+    clear = fields.List(fields.Float(), missing=[.4,.2])
+    soon = fields.List(fields.Float())
+    now = fields.List(fields.Float())
+
+
+class Hub(Schema):
+    ip = fields.String(required=True)
+    token = fields.String()
+
+
+class GcalSettings(Schema):
+    suffix = fields.String()
+    light_maps = fields.List(fields.Nested(Calendar))
+
+class Logging(Schema):
+    enabled = fields.Boolean(default=True)
+    level = fields.Int(default=20)
+
+class PreferenceFile(Schema):
+    google_calendar = fields.Nested(GcalSettings)
+    soon = fields.Int(default=600)
+    check_interval = fields.Int(default=10)
+    philips_hue = fields.Nested(Hub)
+    logging = fields.Nested(Logging)
+    colors = fields.Nested(Colors)

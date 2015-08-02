@@ -1,5 +1,6 @@
 import yaml
 from copy import copy
+from schemas import PreferenceFile
 COLORS = {
         "clear": (1.,1.),
         "soon": (1.,1.),
@@ -61,7 +62,9 @@ class YAMLPreferenceLoader(object):
                 raise TypeError
         except Exception, e:
             raise e
-        self._data = _f
+        self._data, errors = PreferenceFile().load(_f)
+        if errors:
+            raise ValueError(repr(errors))
 
     def get(self, *args, **kwargs):
         # Named kwargs in py3 would fix this. :-/
