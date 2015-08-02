@@ -24,7 +24,7 @@ class CalendarResource(object):
 
     def apply(self, state):
         color = self.colors.get(state, COLORS.get(state))
-        self.logger.debug("%s is %s, setting to %s with %s light" %(
+        self.logger.info("%s is %s, setting to %s with %s light" %(
             self.name_for_people, state, color, self.resource.name
         ))
         self.resource.on = True
@@ -34,13 +34,14 @@ class CalendarResource(object):
     def trigger(self, state, uid):
         if uid == self.trigger_uid:
             return
+        self.logger.debug("Event JSON Hash changed.")
         self.trigger_uid = uid
         self.apply(state)
 
     def change_for_status(self, events):
         self.uid_upcoming = events[0][1]['iCalUID']
         first, second = [i[0] for i in events][:2]
-        f_uid, s_uid = [i[1]['iCalUID'] for i in events][:2]
+        f_uid, s_uid = [hash(str(i[1])) for i in events][:2]
         self.logger.debug("%s events: %s, %s" % (
                 self.name_for_people, first, second
         ))
