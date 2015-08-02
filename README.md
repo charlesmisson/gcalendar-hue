@@ -1,6 +1,12 @@
 # gcalendar-hue
 Google Calendar resource statuses rendered to Philips Hue bulbs. This application takes a configuration file which checks individual google calendars for a free/busy/soon-to-be-busy status, then uses that command to change the color of a light.
 
+## Prerequisites
+
+- Project with Google Calendar API access set up in Google Console
+- client_secrets.json downloaded to computer.
+
+
 ## Overview
 The command can be invoked with:
 
