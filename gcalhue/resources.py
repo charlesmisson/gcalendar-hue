@@ -12,7 +12,7 @@ class CalendarResource(object):
     def __init__(self, calendar, resource, logger, bri=None, colors=None):
         self.calendar = calendar
         self.resource = resource
-        self.uid_upcoming = None
+        self.trigger_uid = None
         self.errors = False
         self.status = None
         self.change = False
@@ -27,28 +27,24 @@ class CalendarResource(object):
         self.resource.brightness = self.bri
         self.resource.xy = color
 
-    def change_for_status(self, events):
-        # if events[0][1]['iCalUID'] == self.uid_upcoming:
-        #     self.logger.debug("%s status is the same (%s)" % (
-        #         self.calendar, events[0][0]
-        #     ))
-        #     return
+    def trigger(self, state, uid):
+        if uid == self.trigger_uid:
+            return
+        self.trigger_uid = uid
+        self.apply(state)
+        self.logger.info("%s changing to %s" % (self.calendar,state))
 
+    def change_for_status(self, events):
         self.uid_upcoming = events[0][1]['iCalUID']
         first, second = [i[0] for i in events][:2]
+        f_uid, s_uid = [i[1]['iCalUID'] for i in events][:2]
         self.logger.debug("%s events: %s, %s" % (
                 self.calendar, first, second
         ))
-        if first in ("clear", "soon",):
-            self.logger.info("%s changing to %s" % (self.calendar, first))
-            self.apply(first)
-        elif second == "soon":
-            # First will always be "now" so either do a `soon` or a `now`
-            # state for the viz.
-            self.apply(second)
+        if second == "soon":
+            self.trigger(second, s_uid)
         else:
-            self.apply(first)
-
+            self.trigger(first, f_uid)
 
 class _DoesNotExist(object):
     pass
