@@ -150,8 +150,12 @@ class Application(object):
         """ Determine the relation of "now" to the top event.
         """
         time = time or self.now()
-        event_start = pytz.utc.localize(event['start']['dateTime'])
-        event_end = pytz.utc.localize(event['end']['dateTime'])
+        event_start = event['start']['dateTime']
+        if not event_start.tzinfo:
+            event_start = pytz.utc.localize(event_start)
+        event_end = event['end']['dateTime']
+        if not event_end.tzinfo:
+            event_end = pytz.utc.localize(event_end)
         if event_start < time < event_end:
             return "now", event
         if event_start > time and (event_start - time).seconds <= self.soon:
